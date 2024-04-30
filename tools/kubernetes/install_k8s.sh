@@ -54,11 +54,15 @@ sudo apt-get install -y kubelet kubectl kubeadm
 sudo apt-mark hold kubelet kubeadm kubectl
 sudo systemctl enable --now kubelet
 sudo swapoff -a
-sudo rm /etc/containerd/config.toml
-sudo kubeadm init
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
-curl https://projectcalico.docs.tigera.io/archive/v3.22/manifests/calico.yaml -O
-kubectl apply -f calico.yaml
+
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/tigera-operator.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/custom-resources.yaml
+watch kubectl get pods -n calico-system
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 kubectl taint nodes --all node-role.kubernetes.io/master-
+
